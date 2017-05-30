@@ -1,16 +1,17 @@
 {
   "name": "azurejwt",
   "version": "1.0.0",
-  "description": "",
+  "description": "Sample plugin to integrate with Azure OAuth Auth Server",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
+  "author": "Nandan Sridhar <nandanks@gmail.com>",
+  "license": "Apache-2.0",
   "dependencies": {
     "jsrsasign": "^7.2.0",
     "jws": "^3.1.4",
     "request": "^2.81.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srinandan/azurejwt.git"
   }
 }
