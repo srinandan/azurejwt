@@ -13,6 +13,8 @@ const authHeaderRegex = /Bearer (.+)/;
 var acceptField = {};
 acceptField.alg = ['RS256'];
 
+const acceptAlg = ['RS256'];
+
 module.exports.init = function (config, logger, stats) {
 
 	var publickeys = {};
@@ -55,6 +57,7 @@ module.exports.init = function (config, logger, stats) {
 			debug('plugin onrequest');
 			try {
 				var jwtpayload = authHeaderRegex.exec(req.headers['authorization']);
+				var isValid = false;
 				if (jwtpayload) {
 					var jwtdecode = jws.decode(jwtpayload[1]);
 					var kid = jwtdecode.header.kid;
@@ -70,8 +73,11 @@ module.exports.init = function (config, logger, stats) {
 							if (exp) {
 								debug("JWT Expiry enabled");
 								acceptField.verifyAt = rs.KJUR.jws.IntDate.getNow();
-							}
-							var isValid = rs.jws.JWS.verifyJWT(jwtpayload[1], pem, acceptField);	
+								isValid = rs.jws.JWS.verifyJWT(jwtpayload[1], pem, acceptField);
+							} else {
+								debug("JWT Expiry disabled");
+								isValid = rs.jws.JWS.verify(jwtpayload[1], pem, acceptAlg);
+							}	
 							if(isValid) {
 								delete (req.headers['authorization']);//removing the azure header
 								req.headers['x-api-key'] = jwtdecode.payload[client_id];//jwtdecode.payload.azp;//TODO add in config								
@@ -81,7 +87,7 @@ module.exports.init = function (config, logger, stats) {
 						}
 					}
 				} else {
-					debug ("ERROR - JWT Token Missing in Auth hoeader");
+					debug ("ERROR - JWT Token Missing in Auth header");
 				} 
 			} catch (err) {
 				debug("ERROR - " + err);
