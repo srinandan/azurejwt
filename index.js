@@ -9,10 +9,10 @@ var rs = require('jsrsasign');
 var JWS = rs.jws.JWS;
 
 const authHeaderRegex = /Bearer (.+)/;
-var acceptField = {};
-acceptField.alg = ['RS256'];
-
 const acceptAlg = ['RS256'];
+
+var acceptField = {};
+acceptField.alg = acceptAlg;
 
 module.exports.init = function (config, logger, stats) {
 
@@ -59,31 +59,35 @@ module.exports.init = function (config, logger, stats) {
 				var isValid = false;
 				if (jwtpayload) {
 					var jwtdecode = JWS.parse(jwtpayload[1]);
-					var kid = jwtdecode.headerObj.kid;
-					if (!kid) {
-						debug ("ERROR - JWT Token Missing in Auth hoeader");
-					} else {
-						var jwk = getJWK(kid);
-						if (!jwk) {
-							debug("ERROR - Could not find public key to match kid");
+					if (jwtdecode.headerObj) {
+						var kid = jwtdecode.headerObj.kid;
+						if (!kid) {
+							debug ("ERROR - JWT Missing kid in header");
 						} else {
-							var publickey = rs.KEYUTIL.getKey(jwk);
-							var pem = rs.KEYUTIL.getPEM(publickey);	
-							if (exp) {
-								debug("JWT Expiry enabled");
-								acceptField.verifyAt = rs.KJUR.jws.IntDate.getNow();
-								isValid = rs.jws.JWS.verifyJWT(jwtpayload[1], pem, acceptField);
+							var jwk = getJWK(kid);
+							if (!jwk) {
+								debug("ERROR - Could not find public key to match kid");
 							} else {
-								debug("JWT Expiry disabled");
-								isValid = rs.jws.JWS.verify(jwtpayload[1], pem, acceptAlg);
-							}	
-							if(isValid) {
-								delete (req.headers['authorization']);//removing the azure header
-								req.headers['x-api-key'] = jwtdecode.payloadObj[client_id];								
-							} else {
-								debug("ERROR - JWT is invalid");
-							}						
-						}
+								var publickey = rs.KEYUTIL.getKey(jwk);
+								var pem = rs.KEYUTIL.getPEM(publickey);	
+								if (exp) {
+									debug("JWT Expiry enabled");
+									acceptField.verifyAt = rs.KJUR.jws.IntDate.getNow();
+									isValid = rs.jws.JWS.verifyJWT(jwtpayload[1], pem, acceptField);
+								} else {
+									debug("JWT Expiry disabled");
+									isValid = rs.jws.JWS.verify(jwtpayload[1], pem, acceptAlg);
+								}	
+								if(isValid) {
+									delete (req.headers['authorization']);//removing the azure header
+									req.headers['x-api-key'] = jwtdecode.payloadObj[client_id];								
+								} else {
+									debug("ERROR - JWT is invalid");
+								}						
+							}
+						}						
+					} else {
+						debug ("ERROR - Missing header in JWT")
 					}
 				} else {
 					debug ("ERROR - JWT Token Missing in Auth header");
