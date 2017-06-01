@@ -4,7 +4,6 @@
  */
 
 var debug = require('debug')('plugin:azurejwt');
-var jws = require('jws');
 var request = require('request');
 var rs = require('jsrsasign');
 var JWS = rs.jws.JWS;
@@ -59,8 +58,8 @@ module.exports.init = function (config, logger, stats) {
 				var jwtpayload = authHeaderRegex.exec(req.headers['authorization']);
 				var isValid = false;
 				if (jwtpayload) {
-					var jwtdecode = jws.decode(jwtpayload[1]);
-					var kid = jwtdecode.header.kid;
+					var jwtdecode = JWS.parse(jwtpayload[1]);
+					var kid = jwtdecode.headerObj.kid;
 					if (!kid) {
 						debug ("ERROR - JWT Token Missing in Auth hoeader");
 					} else {
@@ -80,7 +79,7 @@ module.exports.init = function (config, logger, stats) {
 							}	
 							if(isValid) {
 								delete (req.headers['authorization']);//removing the azure header
-								req.headers['x-api-key'] = jwtdecode.payload[client_id];//jwtdecode.payload.azp;//TODO add in config								
+								req.headers['x-api-key'] = jwtdecode.payloadObj[client_id];								
 							} else {
 								debug("ERROR - JWT is invalid");
 							}						
