@@ -43,6 +43,7 @@ module.exports.init = function (config, logger, stats) {
 	);
 
 	function getJWK(kid) {
+		if (!publickeys.keys) return "";
 		for (var i = 0; i < publickeys.keys.length; i ++) {
 			if (publickeys.keys[i].kid == kid) {
 				return publickeys.keys[i];
