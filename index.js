@@ -44,12 +44,18 @@ module.exports.init = function (config, logger, stats) {
 	);
 
 	function getJWK(kid) {
-		for (var i = 0; i < publickeys.keys.length; i ++) {
-			if (publickeys.keys[i].kid == kid) {
-				return publickeys.keys[i];
+		if (publickeys.constructor == Array) {
+			for (var i = 0; i < publickeys.keys.length; i ++) {
+				if (publickeys.keys[i].kid == kid) {
+					return publickeys.keys[i];
+				}
 			}
+			debug ("no public key that matches kid found");
+			return "";			
+		} else { //if the publickeys url does not return arrays, then use the only public key
+			debug("returning default public key");
+			return publickeys;
 		}
-		return "";
 	}
 
 	return {
